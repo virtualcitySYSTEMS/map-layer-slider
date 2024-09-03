@@ -1,17 +1,22 @@
-import { VcsPlugin, VcsUiApp, PluginConfigEditor } from '@vcmap/ui';
-import { name, version, mapVersion } from '../package.json';
+import {
+  ContentTreeItem,
+  PluginConfigEditor,
+  VcsPlugin,
+  VcsUiApp,
+} from '@vcmap/ui';
+import { Ctor, moduleIdSymbol } from '@vcmap/core';
+import { Component } from 'vue';
+import { mapVersion, name, version } from '../package.json';
+import SliderContentTreeItem from './sliderContentTreeItem.js';
+import layerSliderConfigEditor from './layerSliderConfigEditor.vue';
 
-type PluginConfig = Record<never, never>;
+export type PluginConfig = object;
+
 type PluginState = Record<never, never>;
 
-type MyPlugin = VcsPlugin<PluginConfig, PluginState>;
+export type LayerSliderPlugin = VcsPlugin<PluginConfig, PluginState>;
 
-export default function plugin(
-  config: PluginConfig,
-  baseUrl: string,
-): MyPlugin {
-  // eslint-disable-next-line no-console
-  console.log(config, baseUrl);
+export default function plugin(): LayerSliderPlugin {
   return {
     get name(): string {
       return name;
@@ -22,20 +27,15 @@ export default function plugin(
     get mapVersion(): string {
       return mapVersion;
     },
-    initialize(vcsUiApp: VcsUiApp, state?: PluginState): Promise<void> {
-      // eslint-disable-next-line no-console
-      console.log(
-        'Called before loading the rest of the current context. Passed in the containing Vcs UI App ',
-        vcsUiApp,
-        state,
-      );
+
+    initialize(): Promise<void> {
       return Promise.resolve();
     },
     onVcsAppMounted(vcsUiApp: VcsUiApp): void {
-      // eslint-disable-next-line no-console
-      console.log(
-        'Called when the root UI component is mounted and managers are ready to accept components',
-        vcsUiApp,
+      vcsUiApp.contentTreeClassRegistry.registerClass(
+        this[moduleIdSymbol] || vcsUiApp.dynamicModuleId,
+        SliderContentTreeItem.className,
+        SliderContentTreeItem as unknown as Ctor<typeof ContentTreeItem>,
       );
     },
     /**
@@ -48,31 +48,73 @@ export default function plugin(
      * should return the plugin's serialization excluding all default values
      */
     toJSON(): PluginConfig {
-      // eslint-disable-next-line no-console
-      console.log('Called when serializing this plugin instance');
       return {};
     },
     /**
      * should return the plugins state
-     * @param {boolean} forUrl
      * @returns {PluginState}
      */
-    getState(forUrl?: boolean): PluginState {
-      // eslint-disable-next-line no-console
-      console.log('Called when collecting state, e.g. for create link', forUrl);
-      return {
-        prop: '*',
-      };
+    getState(): PluginState {
+      return {};
     },
     /**
      * components for configuring the plugin and/ or custom items defined by the plugin
      */
     getConfigEditors(): PluginConfigEditor[] {
-      return [];
+      return [
+        {
+          component: layerSliderConfigEditor as Component & { title: string },
+          collectionName: 'contentTree',
+          itemName: SliderContentTreeItem.className,
+        },
+      ];
     },
-    destroy(): void {
-      // eslint-disable-next-line no-console
-      console.log('hook to cleanup');
+    i18n: {
+      de: {
+        layerSlider: {
+          title: 'Slider',
+          name: 'Layer Slider Editor',
+          openTooltip: 'Sliderfenster öffnen',
+          error: {
+            itemTitle: 'Bitte geben Sie einen Title an',
+            itemName: 'Bitte geben Sie einen Namen an',
+          },
+          configEditor: {
+            itemName: 'Name',
+            itemTitle: 'Title',
+            itemWidth: 'Breite',
+            itemHeight: 'Höhe',
+            headerTitleInput: 'Slider Title',
+            headerIconInput: 'Slider Icon',
+            heading: 'Layername (Label)',
+            labelName: 'Labelname',
+            layerName: 'Layername',
+          },
+        },
+      },
+      en: {
+        layerSlider: {
+          title: 'Slider',
+          name: 'Layer Slider Editor',
+          openTooltip: 'Open Slider Window',
+          error: {
+            itemTitle: 'Please enter a title',
+            itemName: 'Please enter a name',
+          },
+          configEditor: {
+            itemName: 'Name',
+            itemTitle: 'Title',
+            itemWidth: 'Width',
+            itemHeight: 'Height',
+            headerTitleInput: 'Slider Title',
+            headerIconInput: 'Slider Icon',
+            heading: 'Layer Name (Label)',
+            labelName: 'Label Name',
+            layerName: 'Layer Name',
+          },
+        },
+      },
     },
+    destroy(): void {},
   };
 }

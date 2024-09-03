@@ -1,3 +1,4 @@
-# floodSlider
+# layer-slider
+
 > Part of the [VC Map Project](https://github.com/virtualcitySYSTEMS/map-ui)
-describe your plugin
+> The Slider plugin allows to control different layers via a slider to visualize layers concurrently.

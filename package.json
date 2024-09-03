@@ -1,5 +1,5 @@
 {
-  "name": "floodSlider",
+  "name": "@vcmap/layer-slider",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -20,7 +20,7 @@
     "type-check": "vue-tsc --noEmit",
     "ensure-types": "vcmplugin ensure-types"
   },
-  "author": "author <email>",
+  "author": "pwuerstle <pwuerstle@vc.systems>",
   "license": "MIT",
   "keywords": [
     "vcmap",
@@ -46,29 +46,25 @@
   "prettier": "@vcsuite/eslint-config/prettier.js",
   "peerDependencies": {
     "@vcmap-cesium/engine": "^4.0.3",
-    "@vcmap/core": "^5.2",
-    "@vcmap/ui": "^5.2",
+    "@vcmap/core": "^5.3.0",
+    "@vcmap/ui": "^5.3.0",
     "ol": "^7.5.2",
     "vue": "~2.7.3",
     "vuetify": "~2.6.7"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.8",
-    "@vcmap/plugin-cli": "^3.0.1",
-    "@vcsuite/eslint-config": "^3.0.6",
-    "@vitest/coverage-v8": "^1.2.2",
+    "@vcmap/plugin-cli": "^3.1.2",
+    "@vcsuite/eslint-config": "^3.0.7",
+    "@vitest/coverage-v8": "^1.4.0",
     "jest-canvas-mock": "^2.5.2",
     "jsdom": "^24.0.0",
     "resize-observer-polyfill": "^1.5.1",
-    "typescript": "^5.3.3",
-    "vitest": "^1.2.2",
-    "vue-tsc": "^1.8.27"
+    "typescript": "^5.4.3",
+    "vitest": "^1.4.0",
+    "vue-tsc": "^2.0.7"
   },
   "mapVersion": "^5.3",
   "dependencies": {
-    "@vcsuite/logger": "^1.0.1",
-    "apexcharts": "^3.47.0",
-    "uuid": "^9.0.1",
-    "vue-apexcharts": "^1.6.2"
+    "@vcsuite/logger": "^1.0.1"
   }
 }
