@@ -56,21 +56,19 @@ class SliderContentTreeItem extends ContentTreeItem {
       slot: options.windowOptions?.slot || WindowSlot.DYNAMIC_LEFT,
       position: {
         width: options.windowOptions?.position?.width || '400px',
-        height: options.windowOptions?.position?.height || '110px',
+        height: options.windowOptions?.position?.height || '120px',
       },
       state: {
         headerTitle:
           options.windowOptions?.state?.headerTitle || 'layerSlider.title',
         headerIcon:
           options.windowOptions?.state?.headerIcon || 'mdi-tune-variant',
-        infoUrlCallback:
-          options.windowOptions?.state?.infoUrlCallback ||
-          app.getHelpUrlCallback('/tools/layerSlider.html'),
       },
       props: {
-        labels: this._labels,
+        labels: this._labels.slice(0),
         layerIndex: this._layerIndex,
         itemName: options.name,
+        itemTitle: options.title,
       },
     };
     this.layerChanged = new VcsEvent<LayerChangedEventPayload>();
@@ -249,7 +247,6 @@ class SliderContentTreeItem extends ContentTreeItem {
     };
     config.layerNames = structuredClone(this._layerNames);
     config.labels = structuredClone(this._labels);
-
     return config;
   }
 }

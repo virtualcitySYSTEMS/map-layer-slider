@@ -1,5 +1,6 @@
 <template style="height: 100%">
-  <v-sheet style="height: 70px">
+  <v-sheet style="height: 80px" class="px-3">
+    <VcsLabel>{{ itemTitle }}</VcsLabel>
     <VcsSlider
       :step="1"
       :min="0"
@@ -22,8 +23,9 @@
     ref,
     watch,
     onUnmounted,
+    onMounted,
   } from 'vue';
-  import { VcsSlider, VcsUiApp } from '@vcmap/ui';
+  import { VcsSlider, VcsUiApp, VcsLabel } from '@vcmap/ui';
   import SliderContentTreeItem from './sliderContentTreeItem.js';
 
   export const windowIdLayerSlider = 'layerSlider_window_id';
@@ -32,6 +34,7 @@
     components: {
       VcsSlider,
       VSheet,
+      VcsLabel,
     },
     props: {
       labels: {
@@ -43,6 +46,10 @@
         required: true,
       },
       itemName: {
+        type: String,
+        required: true,
+      },
+      itemTitle: {
         type: String,
         required: true,
       },
@@ -68,6 +75,10 @@
 
       onUnmounted(() => {
         layerChangedListener();
+      });
+
+      onMounted(() => {
+        selectedLayer.value = currentItem.layerIndex;
       });
 
       return {

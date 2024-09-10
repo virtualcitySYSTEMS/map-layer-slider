@@ -130,6 +130,7 @@
     getCurrentInstance,
     Ref,
     ref,
+    toRaw,
     watch,
   } from 'vue';
   import { getLogger } from '@vcsuite/logger';
@@ -139,8 +140,8 @@
 
   type WindowOptions = {
     position: {
-      height: string;
-      width: string;
+      height?: string;
+      width?: string;
     };
     state: {
       headerTitle: string;
@@ -210,8 +211,8 @@
           localConfig.value = { ...config };
           itemName.value = localConfig.value.name;
           itemTitle.value = localConfig.value.title;
-          itemHeight.value = localConfig.value.windowOptions.position.height;
-          itemWidth.value = localConfig.value.windowOptions.position.width;
+          itemHeight.value = localConfig.value.windowOptions?.position?.height;
+          itemWidth.value = localConfig.value.windowOptions?.position?.width;
           itemHeaderTitle.value =
             localConfig.value.windowOptions.state.headerTitle;
           itemHeaderIcon.value =
@@ -225,15 +226,21 @@
         if (localConfig.value) {
           localConfig.value.name = itemName.value;
           localConfig.value.title = itemTitle.value;
+          if (!localConfig.value.windowOptions) {
+            localConfig.value.windowOptions = { position: {} } as WindowOptions;
+          }
+          if (!localConfig.value.windowOptions.position) {
+            localConfig.value.windowOptions.position = {};
+          }
           localConfig.value.windowOptions.position.height = itemHeight.value;
           localConfig.value.windowOptions.position.width = itemWidth.value;
           localConfig.value.windowOptions.state.headerTitle =
             itemHeaderTitle.value;
           localConfig.value.windowOptions.state.headerIcon =
             itemHeaderIcon.value;
-          localConfig.value.labels = itemLabels.value;
-          localConfig.value.layerNames = itemLayerNames.value;
-          await props.setConfig(localConfig.value);
+          localConfig.value.labels = toRaw(itemLabels.value);
+          localConfig.value.layerNames = toRaw(itemLayerNames.value);
+          await props.setConfig(toRaw(localConfig.value));
         }
       };
 
