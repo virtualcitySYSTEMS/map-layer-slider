@@ -45,7 +45,7 @@
           :disabled="!isFormValid"
           @click="
             () => {
-              $emit('input', localLayerLabelsOptions);
+              $emit('update:modelValue', localLayerLabelsOptions);
               $emit('close');
             }
           "
@@ -67,9 +67,21 @@
     VcsSelect,
     VcsUiApp,
   } from '@vcmap/ui';
-  import { VCard, VDivider, VContainer, VForm, VCol, VRow } from 'vuetify/lib';
-  import { defineComponent, inject, ref, watch } from 'vue';
+  import {
+    VCard,
+    VDivider,
+    VContainer,
+    VForm,
+    VCol,
+    VRow,
+  } from 'vuetify/components';
+  import { defineComponent, inject, PropType, ref, watch } from 'vue';
   import { moduleIdSymbol, volatileModuleId } from '@vcmap/core';
+
+  interface LayerLabelsOptions {
+    layerName: string | undefined;
+    label: string | undefined;
+  }
 
   export default defineComponent({
     name: 'LayerLabelsEdit',
@@ -88,14 +100,14 @@
       VcsFormSection,
     },
     props: {
-      value: {
-        type: Object,
+      modelValue: {
+        type: Object as PropType<LayerLabelsOptions>,
         required: true,
       },
     },
     setup(props) {
       const app = inject('vcsApp') as VcsUiApp;
-      const localLayerLabelsOptions = ref(structuredClone(props.value));
+      const localLayerLabelsOptions = ref(structuredClone(props.modelValue));
       const isFormValid = ref(false);
 
       const layerLocal = ref(

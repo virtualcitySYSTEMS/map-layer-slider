@@ -46,7 +46,13 @@
           </VcsLabel>
         </v-col>
         <v-col cols="8">
-          <VcsTextField id="widthInput" hide-details v-model="itemWidth" />
+          <VcsTextField
+            id="widthInput"
+            type="number"
+            step="10"
+            hide-details
+            v-model="itemWidth"
+          />
         </v-col>
       </v-row>
       <v-row no-gutters>
@@ -56,7 +62,13 @@
           </VcsLabel>
         </v-col>
         <v-col cols="8">
-          <VcsTextField id="heightInput" hide-details v-model="itemHeight" />
+          <VcsTextField
+            id="heightInput"
+            type="number"
+            step="10"
+            hide-details
+            v-model="itemHeight"
+          />
         </v-col>
       </v-row>
       <v-row no-gutters>
@@ -102,7 +114,7 @@
 
       <v-dialog
         v-if="layerLabelOptions"
-        :value="true"
+        :model-value="true"
         width="400"
         :persistent="true"
       >
@@ -128,15 +140,17 @@
     computed,
     defineComponent,
     getCurrentInstance,
+    PropType,
     Ref,
     ref,
     toRaw,
     watch,
   } from 'vue';
   import { getLogger } from '@vcsuite/logger';
-  import { VRow, VCol, VDialog, VContainer } from 'vuetify/lib';
+  import { VRow, VCol, VDialog, VContainer } from 'vuetify/components';
   import { name } from '../package.json';
   import LayerLabelsEdit from './LayerLabelsEdit.vue';
+  import { SliderContentTreeItemOptions } from './sliderContentTreeItem.js';
 
   type WindowOptions = {
     position: {
@@ -147,14 +161,6 @@
       headerTitle: string;
       headerIcon: string;
     };
-  };
-
-  type Config = {
-    name: string;
-    title: string;
-    windowOptions: WindowOptions;
-    labels: string[];
-    layerNames: string[];
   };
 
   interface VcsListItemWithLabel extends VcsListItem {
@@ -178,17 +184,21 @@
     },
     props: {
       getConfig: {
-        type: Function as unknown as () => () => Promise<Config>,
+        type: Function as PropType<() => SliderContentTreeItemOptions>,
         required: true,
       },
       setConfig: {
-        type: Function as unknown as () => (config: Config) => Promise<void>,
+        type: Function as PropType<
+          (config?: SliderContentTreeItemOptions) => void
+        >,
         required: true,
       },
     },
 
     setup(props) {
-      const localConfig = ref<Config | undefined>(undefined);
+      const localConfig = ref<SliderContentTreeItemOptions | undefined>(
+        undefined,
+      );
 
       const vm = getCurrentInstance()!.proxy;
 
@@ -205,24 +215,26 @@
 
       const listItems: Ref<VcsListItemWithLabel[] | undefined> = ref(undefined);
 
-      props
-        .getConfig()
-        .then((config) => {
-          localConfig.value = { ...config };
-          itemName.value = localConfig.value.name;
-          itemTitle.value = localConfig.value.title;
-          itemHeight.value = localConfig.value.windowOptions?.position?.height;
-          itemWidth.value = localConfig.value.windowOptions?.position?.width;
-          itemHeaderTitle.value =
-            localConfig.value.windowOptions.state.headerTitle;
-          itemHeaderIcon.value =
-            localConfig.value.windowOptions.state.headerIcon;
-          itemLabels.value = localConfig.value.labels;
-          itemLayerNames.value = localConfig.value.layerNames;
-        })
-        .catch((err) => getLogger(name).error(err));
+      localConfig.value = props.getConfig();
 
-      const apply = async (): Promise<void> => {
+      itemName.value = localConfig.value.name;
+      itemTitle.value = localConfig.value.title;
+      itemHeight.value = localConfig.value.windowOptions?.position?.height;
+      itemWidth.value = localConfig.value.windowOptions?.position?.width;
+      itemHeaderTitle.value =
+        localConfig.value.windowOptions?.state?.headerTitle;
+      itemHeaderIcon.value = localConfig.value.windowOptions?.state?.headerIcon;
+      if (!localConfig.value.labels) {
+        localConfig.value.labels = [];
+      }
+      itemLabels.value = localConfig.value.labels;
+
+      if (!localConfig.value.layerNames) {
+        localConfig.value.layerNames = [];
+      }
+      itemLayerNames.value = localConfig.value.layerNames;
+
+      const apply = (): void => {
         if (localConfig.value) {
           localConfig.value.name = itemName.value;
           localConfig.value.title = itemTitle.value;
@@ -234,13 +246,16 @@
           }
           localConfig.value.windowOptions.position.height = itemHeight.value;
           localConfig.value.windowOptions.position.width = itemWidth.value;
+          if (!localConfig.value.windowOptions.state) {
+            localConfig.value.windowOptions.state = {};
+          }
           localConfig.value.windowOptions.state.headerTitle =
             itemHeaderTitle.value;
           localConfig.value.windowOptions.state.headerIcon =
             itemHeaderIcon.value;
           localConfig.value.labels = toRaw(itemLabels.value);
           localConfig.value.layerNames = toRaw(itemLayerNames.value);
-          await props.setConfig(toRaw(localConfig.value));
+          props.setConfig(toRaw(localConfig.value));
         }
       };
 
@@ -375,9 +390,9 @@
           }
         },
         ruleName: (v: string): string | boolean =>
-          !!v || (vm.$t('layerSlider.error.itemName') as string),
+          !!v || vm!.$t('layerSlider.error.itemName'),
         ruleTitle: (v: string): string | boolean =>
-          !!v || (vm.$t('layerSlider.error.itemName') as string),
+          !!v || vm!.$t('layerSlider.error.itemName'),
       };
     },
   });

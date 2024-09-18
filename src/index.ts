@@ -60,10 +60,12 @@ export default function plugin(): LayerSliderPlugin {
     /**
      * components for configuring the plugin and/ or custom items defined by the plugin
      */
-    getConfigEditors(): PluginConfigEditor[] {
+    getConfigEditors(): PluginConfigEditor<PluginConfig>[] {
       return [
         {
-          component: layerSliderConfigEditor as Component & { title: string },
+          component: layerSliderConfigEditor as unknown as Component & {
+            title: string;
+          },
           collectionName: 'contentTree',
           itemName: SliderContentTreeItem.className,
         },

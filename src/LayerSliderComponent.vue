@@ -1,13 +1,13 @@
 <template style="height: 100%">
-  <v-sheet style="height: 80px" class="px-3">
+  <v-sheet class="px-3">
     <VcsLabel>{{ itemTitle }}</VcsLabel>
     <VcsSlider
       :step="1"
       :min="0"
+      :ticks="labelsObject"
       :max="labels.length - 1"
-      ticks
+      show-ticks="always"
       type="number"
-      :tick-labels="labels"
       v-model="selectedLayer"
     >
     </VcsSlider>
@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts">
-  import { VSheet } from 'vuetify/lib';
+  import { VSheet } from 'vuetify/components';
   import {
     defineComponent,
     inject,
@@ -24,6 +24,7 @@
     watch,
     onUnmounted,
     onMounted,
+    computed,
   } from 'vue';
   import { VcsSlider, VcsUiApp, VcsLabel } from '@vcmap/ui';
   import SliderContentTreeItem from './sliderContentTreeItem.js';
@@ -61,7 +62,7 @@
       ) as SliderContentTreeItem;
       const selectedLayer = ref(props.layerIndex);
 
-      watch(selectedLayer, (newValue) => {
+      watch(selectedLayer, (newValue: number) => {
         if (currentItem.layerIndex !== newValue) {
           currentItem.setLayer(newValue);
         }
@@ -73,6 +74,16 @@
         },
       );
 
+      type LabelsObjectType = { [key: number]: string };
+
+      const labelsObject = computed(() => {
+        const result: LabelsObjectType = {};
+        props.labels.forEach((value: string, index: number) => {
+          result[index] = value;
+        });
+        return result;
+      });
+
       onUnmounted(() => {
         layerChangedListener();
       });
@@ -82,6 +93,7 @@
       });
 
       return {
+        labelsObject,
         selectedLayer,
         currentItem,
       };

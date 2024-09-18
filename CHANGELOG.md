@@ -1,3 +1,5 @@
-# v1.0.0
+# v2.0.0
 
-Document features and fixes
+- updated to @vcmap/core and @vcmap/ui Version 6.0
+
+# v1.0.0
