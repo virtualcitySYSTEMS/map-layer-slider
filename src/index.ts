@@ -74,20 +74,20 @@ export default function plugin(): LayerSliderPlugin {
     i18n: {
       de: {
         layerSlider: {
-          title: 'Slider',
-          name: 'Layer Slider Editor',
-          openTooltip: 'Sliderfenster öffnen',
+          title: 'Schieberegler',
+          name: 'Ebenen Schieberegler Editor',
+          openTooltip: 'Schiebereglerfenster öffnen',
           error: {
             itemTitle: 'Bitte geben Sie einen Title an',
             itemName: 'Bitte geben Sie einen Namen an',
           },
           configEditor: {
-            itemName: 'Name',
-            itemTitle: 'Title',
+            itemName: 'Name (ID)',
+            itemTitle: 'Titel',
             itemWidth: 'Breite',
             itemHeight: 'Höhe',
-            headerTitleInput: 'Slider Title',
-            headerIconInput: 'Slider Icon',
+            headerTitleInput: 'Schieberegler Titel',
+            headerIconInput: 'Schieberegler Icon',
             heading: 'Layername (Label)',
             labelName: 'Labelname',
             layerName: 'Layername',
@@ -104,7 +104,7 @@ export default function plugin(): LayerSliderPlugin {
             itemName: 'Please enter a name',
           },
           configEditor: {
-            itemName: 'Name',
+            itemName: 'Name (ID)',
             itemTitle: 'Title',
             itemWidth: 'Width',
             itemHeight: 'Height',
