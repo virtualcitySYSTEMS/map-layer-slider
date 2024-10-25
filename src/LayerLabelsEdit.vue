@@ -6,12 +6,11 @@
           <v-row no-gutters>
             <v-col cols="6">
               <VcsLabel html-for="layerName">
-                {{ $t('layerSlider.configEditor.layerName') }}
+                {{ $st('layerSlider.configEditor.layerName') }}
               </VcsLabel>
             </v-col>
             <v-col cols="6">
               <VcsSelect
-                id="layerName"
                 :items="layerLocal"
                 placeholder="layer"
                 v-model="localLayerLabelsOptions.layerName"
@@ -22,12 +21,11 @@
           <v-row no-gutters>
             <v-col cols="6">
               <VcsLabel html-for="labelName">
-                {{ $t('layerSlider.configEditor.labelName') }}
+                {{ $st('layerSlider.configEditor.labelName') }}
               </VcsLabel>
             </v-col>
             <v-col cols="6">
               <VcsTextField
-                id="labelName"
                 placeholder="label"
                 v-model="localLayerLabelsOptions.label"
               />
@@ -38,7 +36,7 @@
       <v-divider />
       <div class="d-flex pa-2">
         <VcsFormButton @click="$emit('close')">
-          {{ $t('components.close') }}
+          {{ $st('components.close') }}
         </VcsFormButton>
         <VcsFormButton
           class="justify-end relativePosition"
@@ -51,7 +49,7 @@
           "
           variant="filled"
         >
-          {{ $t('components.apply') }}
+          {{ $st('components.apply') }}
         </VcsFormButton>
       </div>
     </VcsFormSection>

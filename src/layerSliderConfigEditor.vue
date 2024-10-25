@@ -7,13 +7,12 @@
     <v-container class="py-0 px-1">
       <v-row no-gutters>
         <v-col cols="4">
-          <VcsLabel html-for="nameInput" dense required>
-            {{ $t('layerSlider.configEditor.itemName') }}
+          <VcsLabel html-for="nameInput" required>
+            {{ $st('layerSlider.configEditor.itemName') }}
           </VcsLabel>
         </v-col>
         <v-col cols="8">
           <VcsTextField
-            id="nameInput"
             hide-details
             v-model="itemName"
             :error="!itemName"
@@ -24,13 +23,12 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="4">
-          <VcsLabel html-for="titleInput" dense required>
-            {{ $t('layerSlider.configEditor.itemTitle') }}
+          <VcsLabel html-for="titleInput" required>
+            {{ $st('layerSlider.configEditor.itemTitle') }}
           </VcsLabel>
         </v-col>
         <v-col cols="8">
           <VcsTextField
-            id="titleInput"
             hide-details
             v-model="itemTitle"
             :error="!itemTitle"
@@ -41,13 +39,12 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="4">
-          <VcsLabel html-for="widthInput" dense>
-            {{ $t('layerSlider.configEditor.itemWidth') }}
+          <VcsLabel html-for="widthInput">
+            {{ $st('layerSlider.configEditor.itemWidth') }}
           </VcsLabel>
         </v-col>
         <v-col cols="8">
           <VcsTextField
-            id="widthInput"
             type="number"
             step="10"
             hide-details
@@ -57,13 +54,12 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="4">
-          <VcsLabel html-for="heightInput" dense>
-            {{ $t('layerSlider.configEditor.itemHeight') }}
+          <VcsLabel html-for="heightInput">
+            {{ $st('layerSlider.configEditor.itemHeight') }}
           </VcsLabel>
         </v-col>
         <v-col cols="8">
           <VcsTextField
-            id="heightInput"
             type="number"
             step="10"
             hide-details
@@ -73,30 +69,22 @@
       </v-row>
       <v-row no-gutters>
         <v-col cols="4">
-          <VcsLabel html-for="headerTitleInput" dense>
-            {{ $t('layerSlider.configEditor.headerTitleInput') }}
+          <VcsLabel html-for="headerTitleInput">
+            {{ $st('layerSlider.configEditor.headerTitleInput') }}
           </VcsLabel>
         </v-col>
         <v-col cols="8">
-          <VcsTextField
-            id="headerTitleInput"
-            hide-details
-            v-model="itemHeaderTitle"
-          />
+          <VcsTextField hide-details v-model="itemHeaderTitle" />
         </v-col>
       </v-row>
       <v-row no-gutters>
         <v-col cols="4">
-          <VcsLabel html-for="headerIconInput" dense>
-            {{ $t('layerSlider.configEditor.headerIconInput') }}
+          <VcsLabel html-for="headerIconInput">
+            {{ $st('layerSlider.configEditor.headerIconInput') }}
           </VcsLabel>
         </v-col>
         <v-col cols="8">
-          <VcsTextField
-            id="headerIconInput"
-            hide-details
-            v-model="itemHeaderIcon"
-          />
+          <VcsTextField hide-details v-model="itemHeaderIcon" />
         </v-col>
       </v-row>
     </v-container>
@@ -196,9 +184,7 @@
     },
 
     setup(props) {
-      const localConfig = ref<SliderContentTreeItemOptions | undefined>(
-        undefined,
-      );
+      const localConfig = ref<SliderContentTreeItemOptions>(props.getConfig());
 
       const vm = getCurrentInstance()!.proxy;
 
@@ -214,8 +200,6 @@
       const itemLabels = ref();
 
       const listItems: Ref<VcsListItemWithLabel[] | undefined> = ref(undefined);
-
-      localConfig.value = props.getConfig();
 
       itemName.value = localConfig.value.name;
       itemTitle.value = localConfig.value.title;
@@ -266,7 +250,7 @@
         return {
           name: layerNamesConfig,
           title: `${layerNamesConfig} (${localConfig.value?.labels[index] || 'no Label'})`,
-          label: localConfig.value!.labels[index],
+          label: localConfig.value?.labels[index],
           actions: [
             {
               name: 'edit',
@@ -316,7 +300,7 @@
         itemLayerNames,
         apply,
         localConfig,
-        listItems: listItems as unknown as unknown[],
+        listItems,
         headerActions: [
           {
             name: 'linkButton.editor.add',
@@ -352,9 +336,9 @@
               localConfig.value?.layerNames
             ) {
               localConfig.value.layerNames[editLayerNamesAtIndex.value] =
-                value.layerName as string;
+                value.layerName;
               localConfig.value.labels[editLayerNamesAtIndex.value] =
-                value.label as string;
+                value.label;
               listItems.value =
                 localConfig.value.layerNames.map(createListItem);
             } else {
@@ -390,9 +374,9 @@
           }
         },
         ruleName: (v: string): string | boolean =>
-          !!v || vm!.$t('layerSlider.error.itemName'),
+          !!v || vm!.$st('layerSlider.error.itemName'),
         ruleTitle: (v: string): string | boolean =>
-          !!v || vm!.$t('layerSlider.error.itemName'),
+          !!v || vm!.$st('layerSlider.error.itemName'),
       };
     },
   });

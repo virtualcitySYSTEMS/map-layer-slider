@@ -63,9 +63,8 @@ export default function plugin(): LayerSliderPlugin {
     getConfigEditors(): PluginConfigEditor<PluginConfig>[] {
       return [
         {
-          component: layerSliderConfigEditor as unknown as Component & {
-            title: string;
-          },
+          component: layerSliderConfigEditor as Component,
+          title: 'layerSlider.name',
           collectionName: 'contentTree',
           itemName: SliderContentTreeItem.className,
         },
@@ -76,7 +75,7 @@ export default function plugin(): LayerSliderPlugin {
         layerSlider: {
           title: 'Schieberegler',
           name: 'Ebenen Schieberegler Editor',
-          openTooltip: 'Schiebereglerfenster öffnen',
+          openTooltip: 'Ebenen Schieberegler',
           error: {
             itemTitle: 'Bitte geben Sie einen Title an',
             itemName: 'Bitte geben Sie einen Namen an',
@@ -88,9 +87,9 @@ export default function plugin(): LayerSliderPlugin {
             itemHeight: 'Höhe',
             headerTitleInput: 'Schieberegler Titel',
             headerIconInput: 'Schieberegler Icon',
-            heading: 'Layername (Label)',
+            heading: 'Ebenenname (Label)',
             labelName: 'Labelname',
-            layerName: 'Layername',
+            layerName: 'Ebenenname',
           },
         },
       },
@@ -98,7 +97,7 @@ export default function plugin(): LayerSliderPlugin {
         layerSlider: {
           title: 'Slider',
           name: 'Layer Slider Editor',
-          openTooltip: 'Open Slider Window',
+          openTooltip: 'Layer Slider',
           error: {
             itemTitle: 'Please enter a title',
             itemName: 'Please enter a name',
