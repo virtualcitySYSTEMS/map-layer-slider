@@ -66,5 +66,8 @@
   "mapVersion": "^6.0",
   "dependencies": {
     "@vcsuite/logger": "^1.0.1"
+  },
+  "overrides": {
+    "esbuild": "^0.25.0"
   }
 }
