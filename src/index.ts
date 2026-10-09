@@ -5,18 +5,18 @@ import {
   VcsUiApp,
 } from '@vcmap/ui';
 import { Ctor, moduleIdSymbol } from '@vcmap/core';
-import { Component } from 'vue';
 import { mapVersion, name, version } from '../package.json';
 import SliderContentTreeItem from './sliderContentTreeItem.js';
-import layerSliderConfigEditor from './layerSliderConfigEditor.vue';
+import ConfigEditor from './ConfigEditor.vue';
 
-export type PluginConfig = object;
-
+type PluginConfig = Record<never, never>;
 type PluginState = Record<never, never>;
 
 export type LayerSliderPlugin = VcsPlugin<PluginConfig, PluginState>;
 
 export default function plugin(): LayerSliderPlugin {
+  let removeRegistration: (() => void) | undefined;
+
   return {
     get name(): string {
       return name;
@@ -28,42 +28,25 @@ export default function plugin(): LayerSliderPlugin {
       return mapVersion;
     },
 
-    initialize(): Promise<void> {
-      return Promise.resolve();
-    },
-    onVcsAppMounted(vcsUiApp: VcsUiApp): void {
-      vcsUiApp.contentTreeClassRegistry.registerClass(
-        this[moduleIdSymbol] || vcsUiApp.dynamicModuleId,
+    initialize(app: VcsUiApp): void {
+      removeRegistration?.();
+      const moduleId = this[moduleIdSymbol] || app.dynamicModuleId;
+      app.contentTreeClassRegistry.registerClass(
+        moduleId,
         SliderContentTreeItem.className,
-        SliderContentTreeItem as unknown as Ctor<typeof ContentTreeItem>,
+        SliderContentTreeItem as Ctor<typeof ContentTreeItem>,
       );
+      removeRegistration = (): void => {
+        app.contentTreeClassRegistry.unregisterClass(
+          moduleId,
+          SliderContentTreeItem.className,
+        );
+      };
     },
-    /**
-     * should return all default values of the configuration
-     */
-    getDefaultOptions(): PluginConfig {
-      return {};
-    },
-    /**
-     * should return the plugin's serialization excluding all default values
-     */
-    toJSON(): PluginConfig {
-      return {};
-    },
-    /**
-     * should return the plugins state
-     * @returns {PluginState}
-     */
-    getState(): PluginState {
-      return {};
-    },
-    /**
-     * components for configuring the plugin and/ or custom items defined by the plugin
-     */
     getConfigEditors(): PluginConfigEditor<PluginConfig>[] {
       return [
         {
-          component: layerSliderConfigEditor as Component,
+          component: ConfigEditor,
           title: 'layerSlider.name',
           collectionName: 'contentTree',
           itemName: SliderContentTreeItem.className,
@@ -74,48 +57,63 @@ export default function plugin(): LayerSliderPlugin {
       de: {
         layerSlider: {
           title: 'Schieberegler',
-          name: 'Ebenen Schieberegler Editor',
-          openTooltip: 'Ebenen Schieberegler',
+          name: 'Ebenen Schieberegler',
+          openTooltip: 'Schieberegler öffnen',
           error: {
-            itemTitle: 'Bitte geben Sie einen Title an',
-            itemName: 'Bitte geben Sie einen Namen an',
+            itemTitle: 'Titel ist erforderlich',
+            itemName: 'Name ist erforderlich',
           },
-          configEditor: {
-            itemName: 'Name (ID)',
-            itemTitle: 'Titel',
-            itemWidth: 'Breite',
-            itemHeight: 'Höhe',
-            headerTitleInput: 'Schieberegler Titel',
-            headerIconInput: 'Schieberegler Icon',
-            heading: 'Ebenenname (Label)',
-            labelName: 'Labelname',
-            layerName: 'Ebenenname',
+          config: {
+            itemName: 'Name (ContentTreeItem ID)',
+            itemTitle: 'ContentTreeItem Titel',
+            width: 'Fensterbreite',
+            height: 'Fensterhöhe',
+            title: 'Fensterkopf Titel',
+            icon: 'Fensterkopf Icon',
+            actionTooltip: 'Content-tree Aktion Tooltip',
+            actionIcon: 'Content-tree Aktion Icon',
+            heading: 'Ticks des Sliders (Ebenenname - Label)',
+            tickEditor: {
+              heading: 'Tick-Editor des Sliders',
+              help: 'Erstellen oder bearbeiten Sie Slider-Ticks. Jeder Tick aktiviert die ihm zugewiesene Ebene und zeigt das angegebene Label an. Wenn kein Label angegeben ist, wird der Titel der Ebene verwendet. Ist auch kein Titel vorhanden, wird ihr Name angezeigt.',
+              layer: 'Ebene',
+              label: 'Label-Eintrag',
+            },
           },
         },
       },
       en: {
         layerSlider: {
           title: 'Slider',
-          name: 'Layer Slider Editor',
-          openTooltip: 'Layer Slider',
+          name: 'Layer Slider',
+          openTooltip: 'Open layer slider',
           error: {
-            itemTitle: 'Please enter a title',
-            itemName: 'Please enter a name',
+            itemTitle: 'Title is required',
+            itemName: 'Name is required',
           },
-          configEditor: {
-            itemName: 'Name (ID)',
-            itemTitle: 'Title',
-            itemWidth: 'Width',
-            itemHeight: 'Height',
-            headerTitleInput: 'Slider Title',
-            headerIconInput: 'Slider Icon',
-            heading: 'Layer Name (Label)',
-            labelName: 'Label Name',
-            layerName: 'Layer Name',
+          config: {
+            itemName: 'Name (ContentTreeItem ID)',
+            itemTitle: 'ContentTreeItem title',
+            width: 'Window width',
+            height: 'Window height',
+            title: 'Window header title',
+            icon: 'Window header icon',
+            actionTooltip: 'Content-tree action tooltip',
+            actionIcon: 'Content-tree action icon',
+            heading: "Slider's ticks (layer name - label)",
+            tickEditor: {
+              heading: "Slider's tick editor",
+              help: 'Create or edit slider ticks. Each tick activates its assigned layer and displays the specified label. If no label is provided, the layer’s title is used, falling back to its name.',
+              layer: 'Layer',
+              label: 'Label entry',
+            },
           },
         },
       },
     },
-    destroy(): void {},
+    destroy(): void {
+      removeRegistration?.();
+      removeRegistration = undefined;
+    },
   };
 }

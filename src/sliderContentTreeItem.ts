@@ -4,18 +4,25 @@ import {
   ContentTreeItemOptions,
   WindowComponentOptions,
   VcsUiApp,
-  WindowSlot,
   VcsAction,
+  executeCallbacks,
 } from '@vcmap/ui';
 import { reactive } from 'vue';
 import { VcsEvent } from '@vcmap/core';
 import { name } from '../package.json';
 import LayerSlider from './LayerSliderComponent.vue';
+import {
+  fillOptionsWithDefaults,
+  RequiredOptions,
+  serializeOptions,
+} from './helper.js';
 
 export type SliderContentTreeItemOptions = ContentTreeItemOptions & {
+  actionIcon?: string;
+  actionTooltip?: string;
   windowOptions: Partial<WindowComponentOptions>;
   layerNames: Array<string>;
-  labels: Array<string>;
+  labels: Array<string | undefined>;
 };
 
 type LayerChangedEventPayload = {
@@ -30,57 +37,61 @@ class SliderContentTreeItem extends ContentTreeItem {
 
   private readonly _windowOptions: WindowComponentOptions;
 
+  private readonly _windowConfig: RequiredOptions['windowOptions'];
+
   private _listeners: Array<() => void>;
 
   private _layerIndex: number;
+
+  private _destroyed = false;
 
   public layerChanged: VcsEvent<LayerChangedEventPayload>;
 
   private readonly _layerNames: Array<string>;
 
-  private readonly _labels: Array<string>;
+  private readonly _labels: Array<string | undefined>;
 
   public _app: VcsUiApp;
 
   private activateAction: VcsAction;
 
   constructor(options: SliderContentTreeItemOptions, app: VcsUiApp) {
-    super(options, app);
+    const filledOptions = fillOptionsWithDefaults(options);
+    super(filledOptions, app);
+    this._app = app;
     this.state = StateActionState.INACTIVE;
-    this._layerNames = options.layerNames || [];
-    this._labels = options.labels || [];
+    // TODO: consider filtering the layer names to only include those that exist in the app's layer collection
+    this._layerNames = filledOptions.layerNames;
+    this._labels = filledOptions.labels;
+    this.title = filledOptions.title;
+    this.visible = this._layerNames.length > 0;
     this._layerIndex = 0;
+    this._windowConfig = filledOptions.windowOptions;
+    const { slot, position, state } = this._windowConfig;
     this._windowOptions = {
-      id: options.name,
+      id: filledOptions.name,
       component: LayerSlider,
-      slot: options.windowOptions?.slot || WindowSlot.DYNAMIC_LEFT,
-      position: {
-        width: options.windowOptions?.position?.width || '400px',
-        height: options.windowOptions?.position?.height || '120px',
-      },
-      state: {
-        headerTitle:
-          options.windowOptions?.state?.headerTitle || 'layerSlider.title',
-        headerIcon:
-          options.windowOptions?.state?.headerIcon || 'mdi-tune-variant',
-      },
+      slot,
+      position: { ...position },
+      state: { ...state },
+      provides: { sliderContentTreeItem: this },
       props: {
-        labels: this._labels.slice(0),
+        labels: this._labels,
         layerIndex: this._layerIndex,
-        itemName: options.name,
-        itemTitle: options.title,
       },
     };
     this.layerChanged = new VcsEvent<LayerChangedEventPayload>();
     this._listeners = [];
-    this._app = app;
 
     this.activateAction = reactive({
-      name: 'open',
-      icon: 'mdi-tune-variant',
-      title: 'layerSlider.openTooltip',
+      name: `open-slider-${filledOptions.name}`,
+      icon: filledOptions.actionIcon,
+      title: filledOptions.actionTooltip,
       active: false,
       callback: async () => {
+        if (this._destroyed) {
+          return;
+        }
         if (this.activateAction.active === true) {
           this.activateAction.active = false;
           if (this._app.windowManager.has(this._windowOptions.id!)) {
@@ -96,6 +107,9 @@ class SliderContentTreeItem extends ContentTreeItem {
   }
 
   async activate(): Promise<void> {
+    if (this._destroyed) {
+      return;
+    }
     this.state = StateActionState.ACTIVE;
     this.activateAction.active = true;
 
@@ -117,13 +131,21 @@ class SliderContentTreeItem extends ContentTreeItem {
       await currentLayer.activate();
     }
 
+    if (this._destroyed) {
+      return;
+    }
+
     // Open the window
     if (!this._app.windowManager.has(this._windowOptions.id!)) {
       this._app.windowManager.add(this._windowOptions, name);
     }
+    executeCallbacks(this._app, this._onActivate);
   }
 
   deactivate(): void {
+    if (this._destroyed) {
+      return;
+    }
     this.state = StateActionState.INACTIVE;
 
     // Deactivate all layers
@@ -139,16 +161,20 @@ class SliderContentTreeItem extends ContentTreeItem {
     if (this._app.windowManager.has(this._windowOptions.id!)) {
       this._app.windowManager.remove(this._windowOptions.id!);
     }
+    executeCallbacks(this._app, this._onDeactivate);
   }
 
   // New setLayer function
   setLayer(index: number): void {
+    if (this._destroyed) {
+      return;
+    }
     this.layerIndex = index; // Update layer index
 
     this.layerChanged.raiseEvent({ layerIndex: index, isActive: true });
 
     // Deactivate all layers
-    for (let i = 0; i <= this._layerNames.length; i++) {
+    for (let i = 0; i < this._layerNames.length; i++) {
       if (i !== index) {
         const layerName = this._layerNames[i];
         const layer = this._app.layers.getByKey(layerName);
@@ -176,6 +202,10 @@ class SliderContentTreeItem extends ContentTreeItem {
     this._layerIndex = ind;
   }
 
+  getLayerNameAt(index: number): string {
+    return this._layerNames[index];
+  }
+
   private _clearListeners(): void {
     this._listeners.forEach((cb): void => {
       cb();
@@ -183,9 +213,20 @@ class SliderContentTreeItem extends ContentTreeItem {
     this._listeners.splice(0);
   }
 
+  private _updateActivateAction(): void {
+    if (this._layerNames.length < 2) {
+      this.removeAction(this.activateAction.name);
+    } else if (
+      !this.getTreeViewItem().actions.some(
+        (action) => action.name === this.activateAction.name,
+      )
+    ) {
+      this.addAction(this.activateAction, 12);
+    }
+  }
+
   private _setup(): void {
     this._clearListeners();
-
     this._listeners = [
       this._app.windowManager.removed.addEventListener(
         ({ id }: { id: string }): void => {
@@ -196,6 +237,8 @@ class SliderContentTreeItem extends ContentTreeItem {
       ),
 
       this._app.layers.stateChanged.addEventListener((layer): void => {
+        this.visible = this._layerNames.length > 0;
+        this._updateActivateAction();
         if (this._layerNames.includes(layer.name)) {
           const layerIndex = this._layerNames.indexOf(layer.name);
           if (layer.active) {
@@ -212,7 +255,7 @@ class SliderContentTreeItem extends ContentTreeItem {
       }),
     ];
 
-    this.addAction(this.activateAction, 12);
+    this._updateActivateAction();
   }
 
   async clicked(): Promise<void> {
@@ -224,30 +267,27 @@ class SliderContentTreeItem extends ContentTreeItem {
     }
   }
 
-  destroy(): void {
-    super.destroy();
-    this._clearListeners();
+  toJSON(): SliderContentTreeItemOptions {
+    return serializeOptions({
+      ...(super.toJSON() as SliderContentTreeItemOptions),
+      windowOptions: structuredClone(this._windowConfig),
+      layerNames: structuredClone(this._layerNames),
+      labels: structuredClone(this._labels),
+    });
   }
 
-  toJSON(): SliderContentTreeItemOptions {
-    const config = super.toJSON() as SliderContentTreeItemOptions;
-
-    config.windowOptions = {
-      id: this._windowOptions.id,
-      slot: this._windowOptions.slot,
-      position: {
-        width: this._windowOptions.position?.width,
-        height: this._windowOptions.position?.height,
-      },
-      state: {
-        headerTitle: this._windowOptions.state?.headerTitle,
-        headerIcon: this._windowOptions.state?.headerIcon,
-        infoUrlCallback: this._windowOptions.state?.infoUrlCallback,
-      },
-    };
-    config.layerNames = structuredClone(this._layerNames);
-    config.labels = structuredClone(this._labels);
-    return config;
+  destroy(): void {
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+    this._clearListeners();
+    if (this._app.windowManager.has(this._windowOptions.id!)) {
+      this._app.windowManager.remove(this._windowOptions.id!);
+    }
+    this.removeAction(this.activateAction.name);
+    this.layerChanged.destroy();
+    super.destroy();
   }
 }
 

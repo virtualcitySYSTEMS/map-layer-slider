@@ -1,6 +1,6 @@
-<template style="height: 100%">
+<template>
   <v-sheet class="px-3">
-    <VcsLabel>{{ itemTitle }}</VcsLabel>
+    <VcsLabel>{{ $st(title) }}</VcsLabel>
     <VcsSlider
       :step="1"
       :min="0"
@@ -9,8 +9,7 @@
       show-ticks="always"
       type="number"
       v-model="selectedLayer"
-    >
-    </VcsSlider>
+    />
   </v-sheet>
 </template>
 
@@ -30,6 +29,7 @@
   import SliderContentTreeItem from './sliderContentTreeItem.js';
 
   export const windowIdLayerSlider = 'layerSlider_window_id';
+
   export default defineComponent({
     name: 'LayerSlider',
     components: {
@@ -39,63 +39,58 @@
     },
     props: {
       labels: {
-        type: Array as PropType<string[]>,
+        type: Array as PropType<(string | undefined)[]>,
         required: true,
       },
       layerIndex: {
         type: Number,
         required: true,
       },
-      itemName: {
-        type: String,
-        required: true,
-      },
-      itemTitle: {
-        type: String,
-        required: true,
-      },
     },
     setup(props) {
       const app = inject('vcsApp') as VcsUiApp;
-      const currentItem = app.contentTree.getByKey(
-        props.itemName,
-      ) as SliderContentTreeItem;
+      const item = inject('sliderContentTreeItem') as SliderContentTreeItem;
       const selectedLayer = ref(props.layerIndex);
 
       watch(selectedLayer, (newValue: number) => {
-        if (currentItem.layerIndex !== newValue) {
-          currentItem.setLayer(newValue);
+        if (item.layerIndex !== newValue) {
+          item.setLayer(newValue);
         }
       });
 
-      const layerChangedListener = currentItem.layerChanged.addEventListener(
+      const layerChangedListener = item.layerChanged.addEventListener(
         (state): void => {
           selectedLayer.value = state.layerIndex;
         },
       );
 
-      type LabelsObjectType = { [key: number]: string };
-
-      const labelsObject = computed(() => {
-        const result: LabelsObjectType = {};
-        props.labels.forEach((value: string, index: number) => {
-          result[index] = value;
-        });
-        return result;
-      });
-
-      onUnmounted(() => {
-        layerChangedListener();
-      });
+      const labelsObject = computed(() =>
+        props.labels
+          .map((value: string | undefined, index: number) => {
+            if (value) {
+              return { [index]: app.vueI18n.t(value) };
+            }
+            const layerName = item.getLayerNameAt(index);
+            const layer = app.layers.getByKey(layerName);
+            if (layer?.properties?.title) {
+              return {
+                [index]: app.vueI18n.t(layer.properties.title as string),
+              };
+            }
+            return { [index]: layerName };
+          })
+          .reduce((acc, curr) => ({ ...acc, ...curr }), {}),
+      );
 
       onMounted(() => {
-        selectedLayer.value = currentItem.layerIndex;
+        selectedLayer.value = item.layerIndex;
       });
+      onUnmounted(layerChangedListener);
 
       return {
-        labelsObject,
+        title: item.title,
         selectedLayer,
-        currentItem,
+        labelsObject,
       };
     },
   });
